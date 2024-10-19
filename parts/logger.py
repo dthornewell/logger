@@ -8,7 +8,7 @@ class Logger():
             os.makedirs(self.directory)
     def run(self, image):
         if image is not None:
-            file_name = self.directory + "/" + datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S') + ".jpg"
+            file_name = self.directory + "/" + datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S.%f') + ".jpg"
             
             print(f"Attempting to save file: {file_name}")
             # Save the image and check if it was successful
