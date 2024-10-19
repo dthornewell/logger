@@ -9,10 +9,9 @@ class Camera():
             self.img_num += 1
         if self.img_num > 116:
             self.img_num = 0
-        file_name = "imgs/img_" + str(self.img_num) + ".jpg"
+        file_name = "logger/imgs/img_" + str(self.img_num) + ".jpg"
         img = cv2.imread(file_name)
-        cv2.imshow("img", img)
-        cv2.waitKey(10)
+        # cv2.imshow("img", img)
+        # cv2.waitKey(10)
         # print(img)
-        print(file_name)
         return img

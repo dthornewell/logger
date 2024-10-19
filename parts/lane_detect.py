@@ -3,8 +3,6 @@ import numpy as np
 from matplotlib import pyplot as plt
 from math import factorial
 
-
-
 class LaneDetect():
     def __init__(self):
         self.blockSizeGaus = 117
@@ -103,6 +101,15 @@ class LaneDetect():
         
         return curve
 
+    def get_bezier_curve(self, contour, x_shift):
+        contour_points = np.transpose(np.nonzero(contour))[0::8]
+        control_points = np.array(self.get_bezier(contour_points))
+        t = np.linspace(0, 1, 40)
+        curve = self.plot_bezier(t, control_points)
+        curve = np.flip(curve, axis=1)
+        curve[:,0] += x_shift
+        return curve
+
     def draw_bezier_curve(self, img, contour, x_shift):
         """
         Draws a bezier curve on the image.
@@ -177,6 +184,7 @@ class LaneDetect():
         """
         rows, cols = img.shape[:2]
         return img[crop_top:rows, 0:cols]
+    
     def convert_to_real(self, point, camera_params):
         u = point[0] # X coordinate from image
         v = point[1] # Y coordinate from image
@@ -190,13 +198,13 @@ class LaneDetect():
         Y = ((v - camera_params['c_y']) * Z) / (camera_params['f_y'])
         return [X,Y,Z]
     
-    def run(self, in_image_rgb, in_image_depth):
+    def run(self, in_image_rgb, in_image_depth, in_img_params):
         # img_normal = cv2.imread(f'imgs/img_{self.img_count}.jpg')
         # img_normal = self.conn.root.get_rgb_frame()
         img_normal = in_image_rgb
         # img_depth = self.conn.root.get_depth_frame()
         img_depth = in_image_depth
-        img_params = self.conn.root.get_camera_params() #TODO get params
+        img_params = in_img_params
 
         # cv2.imshow("first img normal", img_normal)
         img = cv2.cvtColor(img_normal, cv2.COLOR_BGR2GRAY)
@@ -234,7 +242,7 @@ class LaneDetect():
         sobel1 = cv2.Sobel(open_open, cv2.CV_8UC1, 1, 0, ksize=3)
 
         contours_open_open,_ = cv2.findContours(open_open, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-        cpy_img = cropped_image.copy()
+        # cpy_img = cropped_image.copy()
 
         if len(contours_open_open) >= 1:
             cv2.drawContours(cropped_image, contours_open_open, -1, (0,255,0), 5)
@@ -256,47 +264,21 @@ class LaneDetect():
         contour1 = self.crop_to_contour(sobel1, largest[0])
         contour2 = self.crop_to_contour(sobel1, largest[1])
 
-        curves = np.zeros_like(sobel1)
-
-        point1 = self.get_bezier(np.transpose(np.nonzero(contour1))[0::8])
-        point2 = self.get_bezier(np.transpose(np.nonzero(contour2))[0::8])
-
-        curve1 = self.draw_bezier_curve(curves, contour1, cv2.boundingRect(largest[0])[0])
-        curve2 = self.draw_bezier_curve(curves, contour2, cv2.boundingRect(largest[1])[0])
-        
+        curve1 = self.get_bezier_curve(contour1, cv2.boundingRect(largest[0])[0])
+        curve2 = self.get_bezier_curve(contour2, cv2.boundingRect(largest[1])[0])
+    
 
         midpoint_line = (curve1 + curve2) / 2
 
-        cv2.polylines(cropped_image, [np.int32(midpoint_line)], isClosed=False, color=(255, 255, 0), thickness=2)
-        # cv2.imshow('curve', curves)
-        # cv2.imshow('Contour1', contour1)
-        # cv2.imshow('Contour2', contour2)
+        height_adjust_midpoint_line = midpoint_line.copy()
 
-        test_img = cv2.imread(f'imgs/img_{self.img_count}.jpg')
-
-        # control_points = self.get_bezier(midpoint_line)
-        control_points = self.get_midpoint_control(sobel1, contours_open_open)
-        print("controlPoints:")
-        for point in control_points:
-            point[1] += self.crop_top # account for scaling
-            print(point[0], point[1])
-            cv2.circle(img, (int(point[0]), int(point[1])), 10, (0,0,255), -1)
-
-
-        # print(control_points)
-        # for point in control_points:
-            
-
-        real_points = []
-        for point in control_points:
-            Z = img_depth.get_value(point[0], point[1])
-            # Find real Z
-            point.append(Z)
-            real_points.append(self.convert_to_real(point, img_params))
-
-        return real_points    
-    
-    
+        height_adjust_midpoint_line[:, 1] += self.crop_top
 
 
 
+        cv2.polylines(img_normal, [np.int32(height_adjust_midpoint_line )], isClosed=False, color=(255, 255, 255), thickness=2)
+        cv2.imshow("test", img_normal)
+        cv2.waitKey(10)
+
+
+        return midpoint_line

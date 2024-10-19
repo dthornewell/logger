@@ -1,8 +1,8 @@
-import donkeycar.donkeycar as dk
+import donkeycar as dk
 from parts.logger import Logger
 from parts.frame_publisher import Frame_Publisher
-print(dir(dk))
-V = dk.vehicle.Vehicle()
-V.add(Frame_Publisher(), outputs=['frame'])
-V.add(Logger(), inputs=['frame'])
-V.start(rate_hz = 2)
+
+V = dk.Vehicle()
+V.add(Frame_Publisher(), outputs=['left', 'right'])
+V.add(Logger(), inputs=['left'])
+V.start(rate_hz=30)
