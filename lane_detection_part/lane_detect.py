@@ -190,13 +190,13 @@ class LaneDetect():
         Y = ((v - camera_params['c_y']) * Z) / (camera_params['f_y'])
         return [X,Y,Z]
     
-    def run(self, in_image_rgb, in_image_depth):
+    def run(self, in_image_rgb, in_image_depth, camera_params):
         # img_normal = cv2.imread(f'imgs/img_{self.img_count}.jpg')
         # img_normal = self.conn.root.get_rgb_frame()
         img_normal = in_image_rgb
         # img_depth = self.conn.root.get_depth_frame()
         img_depth = in_image_depth
-        img_params = self.conn.root.get_camera_params() #TODO get params
+        img_params = camera_params #TODO get params
 
         # cv2.imshow("first img normal", img_normal)
         img = cv2.cvtColor(img_normal, cv2.COLOR_BGR2GRAY)
