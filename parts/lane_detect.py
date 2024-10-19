@@ -270,15 +270,21 @@ class LaneDetect():
 
         midpoint_line = (curve1 + curve2) / 2
 
+        # Just for visuals
         height_adjust_midpoint_line = midpoint_line.copy()
 
         height_adjust_midpoint_line[:, 1] += self.crop_top
-
-
-
         cv2.polylines(img_normal, [np.int32(height_adjust_midpoint_line )], isClosed=False, color=(255, 255, 255), thickness=2)
         cv2.imshow("test", img_normal)
         cv2.waitKey(10)
 
+        # Convert to real world coordinates
+        real_points = []
+        for point in midpoint_line:
+            Z = img_depth.get_value(point[0], point[1])
+            # Find real Z
+            point.append(Z)
+            real_points.append(self.convert_to_real(point, img_params))
 
-        return midpoint_line
+
+        return real_points

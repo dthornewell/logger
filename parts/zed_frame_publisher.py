@@ -49,10 +49,7 @@ class Zed_Frame_Publisher:
             right = sl.Mat()
             self.zed.retrieve_image(right, sl.VIEW.RIGHT)
             depth = sl.Mat()
-            # self.zed.retrieve_measure(depth, sl.MEASURE.DEPTH)
-            self.zed.retrieve_image(depth, sl.VIEW.DEPTH)
+            self.zed.retrieve_measure(depth, sl.MEASURE.DEPTH)
+            #self.zed.retrieve_image(depth, sl.VIEW.DEPTH)
             # cv2.imshow("ZED", image.get_data())
             return np.array(left.get_data()), np.array(right.get_data()), np.array(depth.get_data())
-        else:
-            print("ERROR")
-            return None, None
