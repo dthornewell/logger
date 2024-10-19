@@ -11,7 +11,7 @@ class LaneDetect():
         self.kernel_size = 3
         self.waitTime = 0
         # self.img_count = 0
-        self.crop_top = 500
+        self.crop_top = 250
         # self.image = inImage
         # self.depth = inDepth
 
@@ -165,6 +165,7 @@ class LaneDetect():
         cv2.drawContours(mask,[rect], 0, 255, -1)
         cv2.imshow("mask", mask)
         return cv2.bitwise_and(crop, mask)        
+    
     def kernelx(self, x):
         """
         Returns a square kernel of size x by x.
@@ -261,7 +262,14 @@ class LaneDetect():
 
         largest = self.find_two_largest_contours(contours_open_open)
 
+        if len(largest) == 0:
+            return [0,0]
+
         contour1 = self.crop_to_contour(sobel1, largest[0])
+        if len(largest) == 1:
+            curve1 = self.get_bezier_curve(contour1, cv2.boundingRect(largest[0])[0])
+            return curve1
+    
         contour2 = self.crop_to_contour(sobel1, largest[1])
 
         curve1 = self.get_bezier_curve(contour1, cv2.boundingRect(largest[0])[0])
@@ -277,6 +285,8 @@ class LaneDetect():
         cv2.polylines(img_normal, [np.int32(height_adjust_midpoint_line )], isClosed=False, color=(255, 255, 255), thickness=2)
         cv2.imshow("test", img_normal)
         cv2.waitKey(10)
+
+        return midpoint_line
 
         # Convert to real world coordinates
         real_points = []
