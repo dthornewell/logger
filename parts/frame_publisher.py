@@ -24,8 +24,9 @@ class Frame_Publisher():
         return image[start_y:end_y, start_x:end_x]
     
     def __init__(self):
-        self.cap = cv2.VideoCapture(1)
+        self.cap = cv2.VideoCapture(0)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 2560)
+        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
         self.frame = None
     def run(self):
         ret, self.frame = self.cap.read()   
@@ -37,7 +38,7 @@ class Frame_Publisher():
             # Assuming we want to split vertically
             left_half = self.frame[:, :width // 2]
             right_half = self.frame[:, width // 2:]
-            left_half = self.grab_middle_section(left_half, 0.5, 0.5)
-            right_half = self.grab_middle_section(right_half, 0.5, 0.5)
+            # left_half = self.grab_middle_section(left_half, 0.9, 0.9)
+            # right_half = self.grab_middle_section(right_half, 0.9, 0.9)
             print("left_half: ", left_half.shape)
             return np.array(left_half), np.array(right_half)

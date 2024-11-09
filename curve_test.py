@@ -1,13 +1,16 @@
 import donkeycar as dk
 from parts.logger import Logger
 from parts.frame_publisher import Frame_Publisher
+from parts.camera import Camera
 from parts.lane_detect import LaneDetect
 import pickle
 
 V = dk.Vehicle()
-V.add(Frame_Publisher(), outputs=['left', 'right'], threaded=False)
-V.add(Logger(), inputs=['left'], threaded=False)
-V.add(LaneDetect(), inputs=['left', ' ', ' '], outputs=['points'], threaded=False)
+V.mem['img_num'] = 5
+V.add(Camera(), inputs=['img_num'], outputs=['cv_img'])
+#V.add(Frame_Publisher(), outputs=['left', 'right'], threaded=False)
+V.add(LaneDetect(), inputs=['cv_img', ' ', ' '], outputs=['points', 'overlay'], threaded=False)
+V.add(Logger(), inputs=['left', 'right', 'points'], threaded=False)
 
 #Depth is no longer an image but the meausure which is what you want i think
 # V.add(Zed_Frame_Publisher(), outputs=['left', 'right', 'depth'])

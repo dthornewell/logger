@@ -11,7 +11,8 @@ class LaneDetect():
         self.kernel_size = 3
         self.waitTime = 0
         # self.img_count = 0
-        self.crop_top = 250
+        self.crop_top = 350
+        self.crop_bottom = 550
         # self.image = inImage
         # self.depth = inDepth
 
@@ -163,9 +164,8 @@ class LaneDetect():
         mask = np.zeros_like(crop)
         rect = rect - np.array([x, y])
         cv2.drawContours(mask,[rect], 0, 255, -1)
-        cv2.imshow("mask", mask)
+        # cv2.imshow("mask", mask)
         return cv2.bitwise_and(crop, mask)        
-    
     def kernelx(self, x):
         """
         Returns a square kernel of size x by x.
@@ -179,12 +179,12 @@ class LaneDetect():
         return cv2.adaptiveThreshold(img,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,\
                     cv2.THRESH_BINARY,blockSize,constant)
 
-    def crop_image_top(self, img, crop_top):
+    def crop_image_top(self, img):
         """
         Returns an image cropped from the top.
         """
         rows, cols = img.shape[:2]
-        return img[crop_top:rows, 0:cols]
+        return img[self.crop_top:self.crop_bottom, 0:cols]
     
     def convert_to_real(self, point, camera_params):
         u = point[0] # X coordinate from image
@@ -211,8 +211,10 @@ class LaneDetect():
         img = cv2.cvtColor(img_normal, cv2.COLOR_BGR2GRAY)
         #img = cv2.medianBlur(img,5)
 
+        img_normal = cv2.cvtColor(img_normal, cv2.COLOR_BGR2RGB)
+
         # Crop image to reduce value range and remove sky/background
-        cropped_image = self.crop_image_top(img, self.crop_top)
+        cropped_image = self.crop_image_top(img)
         # cv2.imshow("cropped", cropped_image)
 
         # Gaussian Thresholding
@@ -254,6 +256,7 @@ class LaneDetect():
                 cv2.rectangle(cropped_image, (x,y), (x+w,y+h), (0,0,255), 1)
 
                 centroid, dimensions, angle = cv2.minAreaRect(contour)
+                
                 # draw rotated rect
                 # rect = cv2.minAreaRect(contour)
                 # box = cv2.boxPoints(rect)
@@ -267,9 +270,10 @@ class LaneDetect():
 
         contour1 = self.crop_to_contour(sobel1, largest[0])
         if len(largest) == 1:
+            print("Only one contour")
             curve1 = self.get_bezier_curve(contour1, cv2.boundingRect(largest[0])[0])
             return curve1
-    
+
         contour2 = self.crop_to_contour(sobel1, largest[1])
 
         curve1 = self.get_bezier_curve(contour1, cv2.boundingRect(largest[0])[0])
@@ -278,23 +282,15 @@ class LaneDetect():
 
         midpoint_line = (curve1 + curve2) / 2
 
-        # Just for visuals
         height_adjust_midpoint_line = midpoint_line.copy()
 
         height_adjust_midpoint_line[:, 1] += self.crop_top
+
+
+
         cv2.polylines(img_normal, [np.int32(height_adjust_midpoint_line )], isClosed=False, color=(255, 255, 255), thickness=2)
-        cv2.imshow("test", img_normal)
-        cv2.waitKey(10)
-
-        return midpoint_line
-
-        # Convert to real world coordinates
-        real_points = []
-        for point in midpoint_line:
-            Z = img_depth.get_value(point[0], point[1])
-            # Find real Z
-            point.append(Z)
-            real_points.append(self.convert_to_real(point, img_params))
+        # cv2.imshow("test", img_normal)
+        # cv2.waitKey(10)
 
 
-        return real_points
+        return midpoint_line, img_normal
