@@ -1,12 +1,12 @@
 import cv2
 class Camera():
     def __init__(self) -> None:
-        self.img_num = 0
+        self.img_num = 1
     def run(self):
-        if 0 <= self.img_num <= 116:
+        if 1 <= self.img_num <= 1543:
             self.img_num += 1
-        if self.img_num > 116:
-            self.img_num = 0
-        file_name = "logger/imgs/img_" + str(self.img_num) + ".jpg"
+        if self.img_num > 1543:
+            self.img_num = 1
+        file_name = file_name = "logger/images/img (" + str(self.img_num) + ").jpg"
         img = cv2.imread(file_name)
         return img
